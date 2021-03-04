@@ -1,4 +1,4 @@
-package org.rodman.framework;
+package org.rodman.framework.ioc;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

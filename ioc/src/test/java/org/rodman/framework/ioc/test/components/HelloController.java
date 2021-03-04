@@ -1,8 +1,8 @@
-package org.rodman.framework.test.components;
+package org.rodman.framework.ioc.test.components;
 
 import javax.annotation.Resource;
 
-import org.rodman.framework.Component;
+import org.rodman.framework.ioc.Component;
 
 /**
  * @author 余勇

@@ -1,7 +1,7 @@
-package org.rodman.framework.test;
+package org.rodman.framework.ioc.test;
 
-import org.rodman.framework.BeanFactory;
-import org.rodman.framework.test.components.HelloController;
+import org.rodman.framework.ioc.BeanFactory;
+import org.rodman.framework.ioc.test.components.HelloController;
 
 /**
  * @author 余勇

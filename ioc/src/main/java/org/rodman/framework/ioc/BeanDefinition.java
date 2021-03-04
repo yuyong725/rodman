@@ -1,4 +1,4 @@
-package org.rodman.framework;
+package org.rodman.framework.ioc;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
