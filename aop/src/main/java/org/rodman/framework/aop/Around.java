@@ -1,5 +1,6 @@
-package org.rodman.framework.ioc;
+package org.rodman.framework.aop;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -8,10 +9,16 @@ import java.lang.annotation.Target;
 
 /**
  * @author yuy
- * @date 2021-03-04 10:31
+ * @date 2021-03-05 13:48
  **/
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface Component {
+public @interface Around {
+
+    /**
+     * 注解
+     */
+    Class<? extends Annotation>[] annotationClass() default {};
+
 }

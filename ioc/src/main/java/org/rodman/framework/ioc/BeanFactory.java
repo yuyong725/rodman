@@ -2,16 +2,18 @@ package org.rodman.framework.ioc;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Console;
-import cn.hutool.core.util.ClassUtil;
 
 /**
  * @author 余勇
@@ -27,19 +29,18 @@ public class BeanFactory {
 	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
 	private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<>(16);
 
-	public BeanFactory(Class<?> mainClass) throws Exception {
-		init(mainClass);
+	public BeanFactory(Class<?>... sourceClasses) throws Exception {
+		init(sourceClasses);
 	}
 
 	/**
 	 * 扫描启动类所在目录的所有子目录下的所有 @Bean 注解
 	 */
-	private void init(Class<?> mainClass) throws ClassNotFoundException {
+	private void init(Class<?>... sourceClasses) throws ClassNotFoundException {
 		Console.log("开始启动IOC容器");
+		loadBeanDefinition(sourceClasses);
 
-		final String packagePath = ClassUtil.getPackagePath(mainClass);
-		final String classPath = ClassUtil.getClassPath();
-		loadBeanDefinition(packagePath, classPath);
+		resolveAware();
 
 		loadBeanPostProcessor();
 
@@ -49,17 +50,16 @@ public class BeanFactory {
 	/**
 	 * 加载指定根目录下所有的bean
 	 */
-	private void loadBeanDefinition(final String packagePath, final String classPath) throws ClassNotFoundException{
+	private void loadBeanDefinition(Class<?>... sourceClasses) throws ClassNotFoundException{
 		Console.log("开始加载指定根目录下所有的beanDefinition");
 		// 加载目录下，包含指定注解的类
-		List<File> files = FileUtil.loopFiles(classPath + packagePath, pathname -> pathname.getName().endsWith(".class"));
-		for (File file : files) {
-			String className = file.getAbsolutePath().substring(classPath.length())
-				.replace("/", ".")
-				.replace("\\", ".")
-				.replace(".class", "");
-			Class<?> beanClass = Class.forName(className);
-			// fixme 不健壮，还可能是接口
+		Set<Class<?>> classes = new HashSet<>();
+		for (Class<?> sourceClass : sourceClasses) {
+			String aPackage = ClassUtil.getPackage(sourceClass);
+			Set<Class<?>> subClasses = ClassUtil.getClasses(aPackage);
+			classes.addAll(subClasses);
+		}
+		for (Class<?> beanClass : classes) {
 			if (beanClass.isAnnotationPresent(Component.class)) {
 				// 转成beanDefinition存起来
 				String beanName = beanClass.getSimpleName();
@@ -85,13 +85,30 @@ public class BeanFactory {
 		Console.log("初始化所有 beanPostProcessor");
 		for (BeanDefinition beanDefinition : beanDefinitionMap.values()) {
 			Class<?> beanClass = beanDefinition.getBeanClass();
-			if (beanClass.isAssignableFrom(BeanPostProcessor.class)) {
+			if (BeanPostProcessor.class.isAssignableFrom(beanClass)) {
 				Object bean = getBean(beanClass);
 				beanPostProcessors.add((BeanPostProcessor) bean);
 				Console.log("初始化 beanPostProcessor:[{}] 完成", beanClass.getName());
 			}
 		}
 		Console.log("初始化所有 beanPostProcessor 完成");
+	}
+
+	/**
+	 * 注入aware
+	 */
+	private void resolveAware() {
+		Console.log("开始注入aware");
+		for (BeanDefinition beanDefinition : beanDefinitionMap.values()) {
+			Class<?> beanClass = beanDefinition.getBeanClass();
+			if (BeanFactoryAware.class.isAssignableFrom(beanClass)) {
+				BeanFactoryAware bean = (BeanFactoryAware) getBean(beanClass);
+				bean.setBeanFactory(this);
+				Console.log("初始化 beanPostProcessor:[{}] 完成", beanClass.getName());
+			}
+		}
+
+		Console.log("注入aware结束");
 	}
 
 	/**
@@ -110,7 +127,7 @@ public class BeanFactory {
 		try {
 			Class<?> beanClass = beanDefinition.getBeanClass();
 			instance = beanClass.newInstance();
-			if (!beanClass.isAssignableFrom(BeanPostProcessor.class)) {
+			if (!BeanPostProcessor.class.isAssignableFrom(beanClass)) {
 				for (BeanPostProcessor beanPostProcessor : beanPostProcessors) {
 					instance = beanPostProcessor.postProcessAfterInitialization(instance, beanName);
 				}
@@ -137,4 +154,14 @@ public class BeanFactory {
 		return (T) instance;
 	}
 
+	public List<Object> getBeansByAnnotation(Class<? extends Annotation> type) {
+		List<Object> beans = new ArrayList<>();
+		for (BeanDefinition beanDefinition : beanDefinitionMap.values()) {
+			Class<?> beanClass = beanDefinition.getBeanClass();
+			if (beanClass.isAnnotationPresent(type)) {
+				beans.add(getBean(beanClass));
+			}
+		}
+		return beans;
+	}
 }
