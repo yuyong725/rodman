@@ -4,6 +4,8 @@ import javax.annotation.Resource;
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,6 +46,8 @@ public class BeanFactory {
 
 		loadBeanPostProcessor();
 
+		loadConfiguration();
+
 		Console.log("IOC容器结束");
 	}
 
@@ -60,7 +64,8 @@ public class BeanFactory {
 			classes.addAll(subClasses);
 		}
 		for (Class<?> beanClass : classes) {
-			if (beanClass.isAnnotationPresent(Component.class)) {
+			if (beanClass.isAnnotationPresent(Component.class)
+				|| beanClass.isAnnotationPresent(Configuration.class)) {
 				// 转成beanDefinition存起来
 				String beanName = beanClass.getSimpleName();
 				BeanDefinition beanDefinition = BeanDefinition.newInstance(beanName, beanClass);
@@ -74,12 +79,51 @@ public class BeanFactory {
 				beanDefinitionMap.put(beanName, beanDefinition);
 				Console.log("初始化 beanDefinition =====> {} ", beanName);
 			}
+
+
 		}
 		Console.log("加载指定根目录下所有的beanDefinition完毕");
 	}
 
 	/**
-	 * 初始化所有 beanPostProcessor
+	 * 初始化所有 configuration
+	 */
+	public void loadConfiguration() {
+		Console.log("初始化所有 configuration");
+		for (BeanDefinition beanDefinition : beanDefinitionMap.values()) {
+			Class<?> beanClass = beanDefinition.getBeanClass();
+			if (beanClass.isAnnotationPresent(Configuration.class)) {
+				Object instance = null;
+				try {
+					instance = beanClass.newInstance();
+				} catch (InstantiationException | IllegalAccessException e) {
+					e.printStackTrace();
+				}
+				Method[] declaredMethods = beanClass.getDeclaredMethods();
+				for (Method declaredMethod : declaredMethods) {
+					if (declaredMethod.isAnnotationPresent(Bean.class)) {
+						Class<?>[] parameterTypes = declaredMethod.getParameterTypes();
+						Object[] params = new Object[parameterTypes.length];
+						for (int i = 0; i < parameterTypes.length; i++) {
+							Object param = getBean(parameterTypes[i]);
+							params[i] = param;
+						}
+						try {
+							Object bean = declaredMethod.invoke(instance, params);
+							singletonObjects.put(bean.getClass().getSimpleName(), bean);
+							Console.log("初始化 configuration bean:[{}] 完成", beanClass.getName());
+						} catch (IllegalAccessException | InvocationTargetException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		}
+		Console.log("初始化所有 configuration 完成");
+	}
+
+	/**
+	 * 初始化所有的 configuration
 	 */
 	public void loadBeanPostProcessor() {
 		Console.log("初始化所有 beanPostProcessor");
