@@ -1,15 +1,12 @@
-import javax.servlet.Servlet;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServlet;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Objects;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.StopWatch;
 import cn.hutool.core.lang.Console;
-import cn.hutool.http.server.filter.HttpFilter;
 
 /**
  * @author 余勇
@@ -17,10 +14,10 @@ import cn.hutool.http.server.filter.HttpFilter;
  */
 public class ServerApp {
 
-	public static void init(Class<?>... classes) throws InstantiationException, IllegalAccessException,
-		ClassNotFoundException, IOException, URISyntaxException {
-		StopWatch stopWatch = new StopWatch();
-		stopWatch.start("初始化服务器");
+	private static StopWatch stopWatch = new StopWatch();
+
+	public static void init(Class<?>... classes) throws IllegalAccessException, IOException {
+		stopWatch.start();
 		if (classes.length == 0) {
 			Console.error("初始化Servlet为空");
 			return;
@@ -31,21 +28,14 @@ public class ServerApp {
 		// 框架启动
 		ServerService serverService = new ServerService();
 
-		ServerThreadPool.TASK_POOL.execute(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					initServerService(serverService, classes);
-				} catch (Exception e) {
-					Console.error("启动出错", e);
-				}
+		ServerThreadPool.TASK_POOL.execute(() -> {
+			try {
+				initServerService(serverService, classes);
+			} catch (Exception e) {
+				Console.error("启动出错", e);
 			}
 		});
-		try {
-			serverService.openPort(ServerConfig.port, ServerConfig.sessionTimeout);
-		} catch (Exception e) {
-			Console.error("启动失败", e);
-		}
+		serverService.openPort(ServerConfig.port, ServerConfig.sessionTimeout);
 	}
 
 	private static void initServerService(ServerService miniCatService, Class<?>... classes) throws Exception {
@@ -56,32 +46,28 @@ public class ServerApp {
 			WebServlet webServlet = clazz.getAnnotation(WebServlet.class);
 			if (Objects.nonNull(webServlet) && webServlet.value().length > 0) {
 				HttpServlet servlet = (HttpServlet) clazz.getDeclaredConstructor().newInstance();
-				Console.log("注册Servlet>>" + clazz.getName() + ">>" + webServlet.value()[0]);
 				for (String mapping : webServlet.value()) {
+					Console.log("注册Servlet>>" + clazz.getName() + ">>" + mapping);
 					ServletContainer.putServlet(mapping, servlet);
 				}
-				// 启动core容器
-				initMiniCatHttpPart(servlet);
+				// 调用servlet的初始化逻辑
+				servlet.init();
 				continue;
 			}
 			WebFilter webFilter = clazz.getAnnotation(WebFilter.class);
 			if (Objects.nonNull(webFilter) && webFilter.value().length > 0) {
 				HttpFilter filter = (HttpFilter) clazz.getDeclaredConstructor().newInstance();
-				filter.setMapping(filterFlag.value());
-				LogUtil.log.info("注册Filter>>" + clazz.getName() + ">>" + filterFlag.value());
-				FilterContainer.pushFilter(filter);
-				initMiniCatHttpPart(filter);
+				for (String mapping : webFilter.value()) {
+					Console.log("注册Filter>>" + clazz.getName() + ">>" + mapping);
+					FilterContainer.putServlet(mapping, filter);
+				}
+				filter.init();
 			}
 		}
-		Integer serverOpen = queue.take();
-		if (serverOpen == 0) {
-			return;
-		}
-		LogUtil.log
-			.info("MiniCat:" + MiniCatConfig.port + "启动完成,耗时>>" + (System.currentTimeMillis() - startTime) + "ms");
+		stopWatch.stop();
+		Console.log("server:" + ServerConfig.port + "启动完成,耗时>>" + stopWatch.getLastTaskTimeMillis() + "ms");
 		// 处理请求
 		miniCatService.doService();
 	}
-
 
 }
