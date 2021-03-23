@@ -12,6 +12,7 @@
         <module>ioc</module>
         <module>aop</module>
         <module>server</module>
+        <module>mvc</module>
     </modules>
 
     <dependencies>
