@@ -1,3 +1,5 @@
+package org.rodman.framework.server;
+
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpSession;
 import java.util.HashMap;
@@ -101,7 +103,7 @@ public class ServletRequestImpl extends ServletRequestTemplate {
 			if (isGzip) {
 				data = GZIPUtils.uncompress(data);
 			}
-			return new String(data, ServerConfig.encode);
+			return new String(data);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

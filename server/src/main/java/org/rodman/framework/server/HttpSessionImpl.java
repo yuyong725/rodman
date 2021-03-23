@@ -1,4 +1,5 @@
-import javax.servlet.http.HttpSession;
+package org.rodman.framework.server;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;

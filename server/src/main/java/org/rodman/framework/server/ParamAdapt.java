@@ -1,5 +1,5 @@
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+package org.rodman.framework.server;
+
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +33,7 @@ public class ParamAdapt {
 					continue;
 				}
 				String paramName = line.substring(0, index);
-				String paramValue = URLDecoder.decode(line.substring(index + 1), ServerConfig.encode);
+				String paramValue = URLDecoder.decode(line.substring(index + 1));
 				if (!params.containsKey(paramName)) {
 					List<Object> paramValues = new ArrayList<Object>();
 					params.put(paramName, paramValues);

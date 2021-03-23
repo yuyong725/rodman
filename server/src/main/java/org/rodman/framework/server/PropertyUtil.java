@@ -1,3 +1,5 @@
+package org.rodman.framework.server;
+
 import java.text.ParseException;
 import java.util.Date;
 

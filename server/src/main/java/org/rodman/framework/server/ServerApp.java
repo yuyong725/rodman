@@ -1,3 +1,5 @@
+package org.rodman.framework.server;
+
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpFilter;
@@ -14,7 +16,11 @@ import cn.hutool.core.lang.Console;
  */
 public class ServerApp {
 
-	private static StopWatch stopWatch = new StopWatch();
+	public static void main(String[] args) {
+
+	}
+
+	private static final StopWatch stopWatch = new StopWatch();
 
 	public static void init(Class<?>... classes) throws IllegalAccessException, IOException {
 		stopWatch.start();
@@ -27,18 +33,21 @@ public class ServerApp {
 		ServerConfigBuilder.flush(new ServerConfig(), ServerConfig.PREFIX);
 		// 框架启动
 		ServerService serverService = new ServerService();
+		serverService.openPort(ServerConfig.port, ServerConfig.sessionTimeout);
+		Console.log("监听端口>>", ServerConfig.port);
 
 		ServerThreadPool.TASK_POOL.execute(() -> {
 			try {
 				initServerService(serverService, classes);
 			} catch (Exception e) {
 				Console.error("启动出错", e);
+				e.printStackTrace();
 			}
 		});
-		serverService.openPort(ServerConfig.port, ServerConfig.sessionTimeout);
+
 	}
 
-	private static void initServerService(ServerService miniCatService, Class<?>... classes) throws Exception {
+	private static void initServerService(ServerService serverService, Class<?>... classes) throws Exception {
 		for (Class<?> clazz : classes) {
 			if (!HttpServlet.class.isAssignableFrom(clazz) && !HttpFilter.class.isAssignableFrom(clazz)) {
 				continue;
@@ -67,7 +76,7 @@ public class ServerApp {
 		stopWatch.stop();
 		Console.log("server:" + ServerConfig.port + "启动完成,耗时>>" + stopWatch.getLastTaskTimeMillis() + "ms");
 		// 处理请求
-		miniCatService.doService();
+		serverService.doService();
 	}
 
 }

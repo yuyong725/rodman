@@ -1,6 +1,12 @@
+package org.rodman.framework.server;
+
+import javax.servlet.AsyncContext;
+import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -36,6 +42,11 @@ public abstract class ServletRequestTemplate implements ServletRequest {
 
 	@Override
 	public int getContentLength() {
+		return 0;
+	}
+
+	@Override
+	public long getContentLengthLong() {
 		return 0;
 	}
 
@@ -157,5 +168,40 @@ public abstract class ServletRequestTemplate implements ServletRequest {
 	@Override
 	public int getLocalPort() {
 		return 0;
+	}
+
+	@Override
+	public ServletContext getServletContext() {
+		return null;
+	}
+
+	@Override
+	public AsyncContext startAsync() throws IllegalStateException {
+		return null;
+	}
+
+	@Override
+	public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse) throws IllegalStateException {
+		return null;
+	}
+
+	@Override
+	public boolean isAsyncStarted() {
+		return false;
+	}
+
+	@Override
+	public boolean isAsyncSupported() {
+		return false;
+	}
+
+	@Override
+	public AsyncContext getAsyncContext() {
+		return null;
+	}
+
+	@Override
+	public DispatcherType getDispatcherType() {
+		return null;
 	}
 }

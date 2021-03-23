@@ -1,3 +1,5 @@
+package org.rodman.framework.server;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -13,7 +15,7 @@ public class ServerThreadPool {
 		10, TimeUnit.SECONDS,
 		new LinkedBlockingQueue<Runnable>());
 
-	public static final ExecutorService TASK_POOL =  new ThreadPoolExecutor(10, ServerConfig.httpThread,
+	public static final ExecutorService TASK_POOL =  new ThreadPoolExecutor(10, ServerConfig.taskThread,
 		10, TimeUnit.SECONDS,
 		new LinkedBlockingQueue<Runnable>());
 

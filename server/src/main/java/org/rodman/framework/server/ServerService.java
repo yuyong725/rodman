@@ -1,3 +1,5 @@
+package org.rodman.framework.server;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -17,30 +19,25 @@ public class ServerService {
 
 	public void doService() throws IOException {
 		while (true) {
-			try {
-				Socket socket = server.accept();
-				doSocket(socket);
-			} finally {
-			}
+			Socket socket = server.accept();
+			doSocket(socket);
 		}
 	}
 
 	private void doSocket(final Socket socket) {
-		ServerThreadPool.HTTP_POOL.execute(new Runnable() {
-			public void run() {
+		ServerThreadPool.HTTP_POOL.execute(() -> {
+			try {
+				HttpBuilder builder = new HttpBuilder(socket);
+				builder.builder();
+				builder.invoke();
+				builder.flushAndClose();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}finally{
 				try {
-					HttpBuilder builder = new HttpBuilder(socket);
-					builder.builder();
-					builder.invoke();
-					builder.flushAndClose();
-				} catch (Exception e) {
+					socket.close();
+				} catch (IOException e) {
 					e.printStackTrace();
-				}finally{
-					try {
-						socket.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
 				}
 			}
 		});

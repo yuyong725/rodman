@@ -1,7 +1,10 @@
+package org.rodman.framework.server;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.rmi.ServerException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,9 +28,9 @@ public class ServerConfigBuilder {
 		if (!config.isEmpty()) {
 			return;
 		}
-		InputStream ins = ServerConfigBuilder.class.getClassLoader().getResourceAsStream("cat.properties");
+		InputStream ins = ServerConfigBuilder.class.getClassLoader().getResourceAsStream("server.properties");
 		if (ins == null) {
-			throw new CatException("rodman.properties不存在");
+			throw new ServerException("server.properties不存在");
 		}
 		loadPropertyByDir(ins);
 	}
@@ -55,13 +58,13 @@ public class ServerConfigBuilder {
 				continue;
 			}
 			String configField = prefix + "." + field.getName();
-			Object configValue = getProperty(configField);
-			if (StrUtil.isBlank(configValue.toString())) {
+			String configValue = getProperty(configField);
+			if (StrUtil.isBlank(configValue)) {
 				continue;
 			}
-			configValue = PropertyUtil.parseValue(configValue, field.getType());
+			Object parseValue = PropertyUtil.parseValue(configValue, field.getType());
 			field.setAccessible(true);
-			field.set(config, configValue);
+			field.set(config, parseValue);
 		}
 		return (T) config;
 	}

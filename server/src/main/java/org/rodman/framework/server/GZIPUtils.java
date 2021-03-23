@@ -1,3 +1,5 @@
+package org.rodman.framework.server;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -5,12 +7,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-/**
- *  
- * @author wenqi5 
- *  
- */  
-public class GZIPUtils {  
+public class GZIPUtils {
   
     public static final String GZIP_ENCODE_UTF_8 = "UTF-8";  
   
@@ -22,13 +19,8 @@ public class GZIPUtils {
      * @return 
      */  
     public static byte[] compress(String str) {  
-        try {
-			return compress(str.getBytes(ServerConfig.encode));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			return null;
-		}  
-    }  
+		return compress(str.getBytes());
+    }
   
     /** 
      * 字符串压缩为GZIP字节数组 
