@@ -1,4 +1,3 @@
-import java.io.IOException;
 
 import org.rodman.framework.server.ServerApp;
 
@@ -8,7 +7,7 @@ import org.rodman.framework.server.ServerApp;
  */
 public class TestApp {
 
-	public static void main(String[] args) throws IOException, IllegalAccessException {
+	public static void main(String[] args) throws Exception {
 		ServerApp.init(TestServlet.class);
 	}
 

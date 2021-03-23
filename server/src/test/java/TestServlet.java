@@ -4,6 +4,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import cn.hutool.json.JSONUtil;
 
 /**
  * @author 余勇
@@ -14,6 +18,9 @@ public class TestServlet extends HttpServlet {
 
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		resp.getOutputStream().write("test".getBytes());
+		Map<String, String> ret = new HashMap<>();
+		ret.put("name", "张三");
+		ret.put("age", "18");
+		resp.getOutputStream().write(JSONUtil.toJsonStr(ret).getBytes());
 	}
 }

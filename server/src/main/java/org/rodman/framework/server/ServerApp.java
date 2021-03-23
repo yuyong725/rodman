@@ -28,22 +28,22 @@ public class ServerApp {
 			Console.error("初始化Servlet为空");
 			return;
 		}
-		// 加載配置文件
-		ServerConfigBuilder.builder();
-		ServerConfigBuilder.flush(new ServerConfig(), ServerConfig.PREFIX);
-		// 框架启动
-		ServerService serverService = new ServerService();
-		serverService.openPort(ServerConfig.port, ServerConfig.sessionTimeout);
-		Console.log("监听端口>>", ServerConfig.port);
 
-		ServerThreadPool.TASK_POOL.execute(() -> {
-			try {
-				initServerService(serverService, classes);
-			} catch (Exception e) {
-				Console.error("启动出错", e);
-				e.printStackTrace();
-			}
-		});
+		try {
+			// 加載配置文件
+			ServerConfigBuilder.builder();
+			ServerConfigBuilder.flush(new ServerConfig(), ServerConfig.PREFIX);
+
+			// 框架启动
+			ServerService serverService = new ServerService();
+			serverService.openPort(ServerConfig.port);
+			Console.log("监听端口>>", ServerConfig.port);
+
+			initServerService(serverService, classes);
+		} catch (Exception e) {
+			Console.error("启动出错", e);
+			e.printStackTrace();
+		}
 
 	}
 

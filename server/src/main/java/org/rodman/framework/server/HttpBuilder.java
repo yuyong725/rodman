@@ -1,19 +1,17 @@
 package org.rodman.framework.server;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.Objects;
 
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.lang.Console;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.ZipUtil;
-import cn.hutool.extra.compress.CompressUtil;
-import cn.hutool.extra.servlet.ServletUtil;
 import lombok.Data;
 
 /**
@@ -86,9 +84,11 @@ public class HttpBuilder {
 		response.setHeader("Server", "server/1.0 By rodman");
 		response.setHeader("Content-Type", "application/json;charset=UTF-8");
 
-		String cookie = MessageFormat.format("{0}={1}; path=/ ; HttpOnly", ServerConfig.sessionIdField,
-			request.getSessionId());
-		response.setHeader("Set-Cookie", cookie);
+		if (StrUtil.isNotBlank(request.getSessionId())) {
+			String cookie = MessageFormat.format("{0}={1}; path=/ ; HttpOnly", ServerConfig.sessionIdField,
+				request.getSessionId());
+			response.setHeader("Set-Cookie", cookie);
+		}
 		response.setHeader("Content-Encoding", "gzip");
 	}
 
@@ -108,23 +108,23 @@ public class HttpBuilder {
 	public void builder() {
 		try {
 			buildRequest();
-			if (!ServerConfig.method.contains(this.request.getMethod())) {
+			if (!request.isValid()) {
+				Console.log("错误的请求报文, 忽略无效请求");
 				buildResponse(400, "400 bad request");
+				return;
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			try {
-				buildResponse(500, "error execution");
-			} catch (IOException e1) {
-				e1.printStackTrace();
+			if (!ServletContainer.match(request.getRequestURI())) {
+				Console.error("API不存在: [{}]", request.getRequestURI());
+				buildResponse(404, "404 page not found");
+				return;
 			}
-		}
+			if (!ServerConfig.method.contains(request.getMethod())) {
+				Console.error("请求方法不支持: [{}]", request.getMethod());
+				buildResponse(400, "400 method not supported");
+				return;
+			}
 
-	}
-
-	public void invoke() {
-		try {
-			this.response = new ResponseFacade();
+			response = new ResponseFacade();
 			ServerProcess.doService(this);
 			buildResponse();
 		} catch (Exception e) {
@@ -162,12 +162,9 @@ public class HttpBuilder {
 	}
 
 	public void buildRequest() {
-		this.request = new RequestFacade();
+		request = new RequestFacade();
 		try {
 			byte[] data = IoUtil.readBytes(socket.getInputStream(), ServerConfig.maxHeaderLength);
-			if (Objects.isNull(data) || data.length == 0) {
-				return;
-			}
 
 			// 数据读取完全
 			boolean isReadEnd = data.length < ServerConfig.maxHeaderLength;
@@ -183,7 +180,8 @@ public class HttpBuilder {
 			String[] headers = headerContext.split("\r\n");
 			// 最少有协议体和方法
 			if (headers.length < 2) {
-				throw new ServerException("错误的请求报文");
+				request.setValid(false);
+				return;
 			}
 			String line = headers[0];
 			while (line.contains("  ")) {
@@ -192,7 +190,8 @@ public class HttpBuilder {
 			String[] vanguards = line.trim().split(" ");
 			// GET /api/v3/internal/my_resources HTTP/1.1
 			if (vanguards.length != 3) {
-				throw new ServerException("错误的请求报文");
+				request.setValid(false);
+				return;
 			}
 			request.setMethod(vanguards[0].toUpperCase());
 			String requestURI = vanguards[1];
@@ -231,6 +230,7 @@ public class HttpBuilder {
 				if (name.equalsIgnoreCase("Content-Type")) {
 					request.setContentType(value);
 				}
+				request.setHeader("X-Requested-With", "XMLHttpRequest");
 			}
 			try {
 				// 没有指定请求体长度 或者 数据读取完全了

@@ -21,4 +21,7 @@ public class ServletContainer {
 		SERVLET_CONTAINER.put(path, servlet);
 	}
 
+	public static boolean match(String path){
+		return SERVLET_CONTAINER.containsKey(path);
+	}
 }

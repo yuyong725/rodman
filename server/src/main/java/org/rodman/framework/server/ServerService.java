@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import cn.hutool.core.lang.Console;
+
 /**
  * @author 余勇
  * @date 2021年03月06日 20:16:00
@@ -12,9 +14,8 @@ public class ServerService {
 
 	private ServerSocket server;
 
-	public void openPort(Integer port, Integer timeOut) throws IOException {
+	public void openPort(Integer port) throws IOException {
 		server = new ServerSocket(port);
-		server.setSoTimeout(timeOut);
 	}
 
 	public void doService() throws IOException {
@@ -29,7 +30,6 @@ public class ServerService {
 			try {
 				HttpBuilder builder = new HttpBuilder(socket);
 				builder.builder();
-				builder.invoke();
 				builder.flushAndClose();
 			} catch (Exception e) {
 				e.printStackTrace();

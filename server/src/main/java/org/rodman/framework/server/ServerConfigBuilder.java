@@ -4,13 +4,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.rmi.ServerException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.ClassUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.TypeUtil;
 
 /**
  * @author 余勇
@@ -50,7 +54,7 @@ public class ServerConfigBuilder {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T flush(BaseConfig config, String prefix)
+	public static <T> T flush(ServerConfig config, String prefix)
 		throws IllegalArgumentException, IllegalAccessException {
 		Field[] fields = config.getClass().getDeclaredFields();
 		for (Field field : fields) {
@@ -62,7 +66,9 @@ public class ServerConfigBuilder {
 			if (StrUtil.isBlank(configValue)) {
 				continue;
 			}
-			Object parseValue = PropertyUtil.parseValue(configValue, field.getType());
+
+			Object parseValue = Convert.convert(field.getType(), configValue);
+
 			field.setAccessible(true);
 			field.set(config, parseValue);
 		}

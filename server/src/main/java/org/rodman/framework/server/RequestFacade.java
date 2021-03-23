@@ -82,7 +82,6 @@ public class RequestFacade implements HttpServletRequest {
 	 * 请求类型
 	 */
 	private String contentType;
-
 	/**
 	 * 编码
 	 */
@@ -92,6 +91,11 @@ public class RequestFacade implements HttpServletRequest {
 	 * sessionId
 	 */
 	private String sessionId;
+
+	/**
+	 * 是否有效
+	 */
+	private boolean valid = true;
 
 	public void setInputStream(ByteArrayInputStream inputStream) {
 		this.inputStream = new ServerInputStream(inputStream);
@@ -399,10 +403,6 @@ public class RequestFacade implements HttpServletRequest {
 
 	@Override
 	public DispatcherType getDispatcherType() {
-		return null;
-	}
-
-	public String getSessionId() {
 		return null;
 	}
 
