@@ -16,13 +16,9 @@ import cn.hutool.core.lang.Console;
  */
 public class ServerApp {
 
-	public static void main(String[] args) {
-
-	}
-
 	private static final StopWatch stopWatch = new StopWatch();
 
-	public static void init(Class<?>... classes) throws IllegalAccessException, IOException {
+	public static void init(Class<?>... classes) {
 		stopWatch.start();
 		if (classes.length == 0) {
 			Console.error("初始化Servlet为空");

@@ -40,6 +40,7 @@ public class BeanFactory {
 	 */
 	private void init(Class<?>... sourceClasses) throws ClassNotFoundException {
 		Console.log("开始启动IOC容器");
+
 		loadBeanDefinition(sourceClasses);
 
 		resolveAware();
@@ -54,7 +55,7 @@ public class BeanFactory {
 	/**
 	 * 加载指定根目录下所有的bean
 	 */
-	private void loadBeanDefinition(Class<?>... sourceClasses) throws ClassNotFoundException{
+	private void loadBeanDefinition(Class<?>... sourceClasses) {
 		Console.log("开始加载指定根目录下所有的beanDefinition");
 		// 加载目录下，包含指定注解的类
 		Set<Class<?>> classes = new HashSet<>();
@@ -123,7 +124,7 @@ public class BeanFactory {
 	}
 
 	/**
-	 * 初始化所有的 configuration
+	 * 初始化所有的 BeanPostProcessor
 	 */
 	public void loadBeanPostProcessor() {
 		Console.log("初始化所有 beanPostProcessor");
